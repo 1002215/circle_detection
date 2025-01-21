@@ -59,11 +59,14 @@ cv2.waitKey()
 # Close all OpenCV windows
 cv2.destroyAllWindows()'''
 
+
+'''
 # Read image.
 img = cv2.imread('beanlid.jpg', cv2.IMREAD_COLOR)
 
 # Convert to grayscale.
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 
 # Blur using 3 * 3 kernel.
 gray_blurred = cv2.blur(gray, (1, 1))
@@ -86,30 +89,74 @@ if detected_circles is not None:
     for pt in detected_circles[0, :]:
         a, b, r = pt[0], pt[1], pt[2]
         circles.append((a, b, r))
-    avg_a = 0
-    avg_b = 0
-    avg_r = 0
 
     for circle in circles:
         if circle == circles[0]:
             mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-            cv2.circle(mask, (circle[0], circle[1]), circle[2], 255, -1)
-
-            # Apply the mask
             masked_image = cv2.bitwise_and(img, img, mask=mask)
-        if circle == circles[-1]:
-            avg_a = avg_a/len(circles)
-            avg_b = avg_b/ len(circles)
-            avg_r = avg_r/ len(circles)
+            gray = cv2.cvtColor(masked_image, cv2.COLOR_BGR2GRAY)
+            _, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+            contours, _ = cv2.findContours(
+                threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            i = 0
 
-            cv2.circle(masked_image, (int(avg_a), int(avg_b)), int(avg_r), (0, 255, 0), 2)
+            # list for storing names of shapes
+            for contour in contours:
 
-            # Draw a small circle (of radius 1) to show the center.
-            cv2.circle(masked_image, (int(avg_a), int(avg_b)), 1, (0, 0, 255), 3)
-            cv2.imshow("Detected Circle", masked_image)
-            cv2.waitKey(0)
-    else:
-            a, b, r = circle[0], circle[1], circle[2]
-            avg_a += a
-            avg_b += b
-            avg_r += r
+                # here we are ignoring first counter because
+                # findcontour function detects whole image as shape
+                if i == 0:
+                    i = 1
+                    continue
+
+                # cv2.approxPloyDP() function to approximate the shape
+                approx = cv2.approxPolyDP(
+                    contour, 0.01 * cv2.arcLength(contour, True), True)
+
+                # using drawContours() function
+                cv2.drawContours(img, [contour], 0, (0, 0, 255), 5)
+
+                # finding center point of shape
+                M = cv2.moments(contour)
+                if M['m00'] != 0.0:
+                    x = int(M['m10'] / M['m00'])
+                    y = int(M['m01'] / M['m00'])
+                    cv2.imshow('shapes', img)
+
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+
+'''
+
+# Read image.
+img = cv2.imread('beanlid.jpg', cv2.IMREAD_COLOR)
+
+# Convert to grayscale.
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Blur using 3 * 3 kernel.
+gray_blurred = cv2.blur(gray, (3, 3))
+
+# Apply Hough transform on the blurred image.
+detected_circles = cv2.HoughCircles(gray_blurred,
+                                    cv2.HOUGH_GRADIENT, 1, 20, param1=50,
+                                    param2=30, minRadius=1, maxRadius=1000)
+
+# Draw circles that are detected.
+if detected_circles is not None:
+
+    # Convert the circle parameters a, b and r to integers.
+    detected_circles = np.uint16(np.around(detected_circles))
+
+    for pt in detected_circles[0]:
+        a, b, r = pt[0], pt[1], pt[2]
+
+        # Draw the circumference of the circle.
+        cv2.circle(img, (a, b), r, (0, 255, 0), 2)
+
+        # Draw a small circle (of radius 1) to show the center.
+        cv2.circle(img, (a, b), 1, (0, 0, 255), 3)
+        cv2.imshow("Detected Circle", img)
+        cv2.waitKey(0)
+        break
+cv2.destroyAllWindows()
