@@ -25,7 +25,7 @@ def frame_processor(img):
     # Convert to grayscale.
     gray = cv2.cvtColor(hsvapplied, cv2.COLOR_BGR2GRAY)
 
-    # Blur using 3 * 3 kernel to reduce noise.
+    # Blur using 5 x 5 kernel to reduce noise.
     gray_blurred = cv2.blur(gray, (5, 5))
     
     # Apply Hough transform to detect all possible circles, returning the center coordinates and radius of each circle.
