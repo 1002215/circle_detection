@@ -8,7 +8,8 @@ import numpy as np
 
 # For each frame, apply a mask to only detect the top of the can, and return the circumference and center drawn on the frame
 def frame_processor(img):
-
+    img=cv2.resize(img,(708,529))
+    img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
     # Apply an hsv to only register the top of the can.
     # https://www.geeksforgeeks.org/choosing-the-correct-upper-and-lower-hsv-boundaries-for-color-detection-with-cv-inrange-opencv/
     hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -53,38 +54,32 @@ def frame_processor(img):
 
     return img
 
-
 # Open the video capture on the video of the can.
 # https://docs.opencv.org/4.x/dd/d43/tutorial_py_video_display.html
-cap = cv2.VideoCapture('can2.mov')  # 0 for default camera, or provide a video file path
-
-if cap.isOpened():
+while True:
+    closed = 0
+    cap = cv2.VideoCapture('can2.mov')  # 0 for default camera, or provide a video file path
 
     while True:
 
-        try:
+        # Read the frame from the video capture.
+        success, frame = cap.read()
+        # If the frame was not read correctly, break the loop to end the program.
+        if success == True:
 
-            # Read the frame from the video capture.
-            success, frame = cap.read()
-
-            # If the frame was not read correctly, break the loop to end the program.
-            if success == True:
-
-                # Display the frame.
-                cv2.imshow("Emma Chetan Circumference and Center Video PWP", frame_processor(frame))
-
-                # Check if the user pressed 'q' to quit.
-                if cv2.waitKey(25) == ord('q'):
-
-                    break
-
-            else:
-
+            # Display the frame.
+            cv2.imshow("Emma Chetan Circumference and Center Video PWP", frame_processor(frame))
+            # Check if the user pressed 'q' to quit.
+            if cv2.waitKey(25) == ord('q'):
+                closed=1
                 break
 
-        except Exception:
+        else:
 
-            continue
+            break
+    if closed:
+        break
+
 
 # Release the video capture and close all windows.
 cap.release()
